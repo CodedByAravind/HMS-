@@ -1,0 +1,62 @@
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    phone_number = db.Column(db.String(20))
+    address = db.Column(db.String(255))
+    specialization = db.Column(db.String(150))  
+    experience = db.Column(db.String(50))  
+    reg_id = db.Column(db.String(100))  
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+    role = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_blacklisted = db.Column(db.Boolean, default=False)
+    department = db.relationship('Department', backref='doctors', lazy=True)
+
+class Department(db.Model):
+    __tablename__ = 'departments'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=True)
+
+class Appointment(db.Model):
+    __tablename__ = 'appointments'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    date = db.Column(db.String(20), nullable=False)
+    time = db.Column(db.String(20), nullable=False)
+    status = db.Column(db.String(20), default="Booked")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    patient = db.relationship('User', foreign_keys=[patient_id], backref='patient_appointments', lazy=True)
+    doctor = db.relationship('User', foreign_keys=[doctor_id], backref='doctor_appointments', lazy=True)
+    
+class Treatment(db.Model):
+    __tablename__ = 'treatments'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=False)
+
+    visit_type = db.Column(db.String(50), nullable=False)
+    test_done = db.Column(db.String(150), nullable=True)
+    diagnosis = db.Column(db.Text, nullable=False)
+    prescription = db.Column(db.Text, nullable=False)
+    medicines = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    appointment = db.relationship('Appointment', backref='treatment_details', lazy=True)
+
+
+class DoctorAvailability(db.Model):
+    __tablename__ = 'doctor_availability'
+    id = db.Column(db.Integer, primary_key=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    date = db.Column(db.String, nullable=False)
+    morning_available = db.Column(db.Boolean, default=False)
+    evening_available = db.Column(db.Boolean, default=False)
