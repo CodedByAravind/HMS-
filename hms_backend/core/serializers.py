@@ -47,8 +47,6 @@ class PatientSerializer(serializers.ModelSerializer):
 
 
 class DoctorAvailabilitySerializer(serializers.ModelSerializer):
-    doctor = DoctorSerializer(read_only=True)
-
     class Meta:
         model = DoctorAvailability
         fields = "__all__"
@@ -107,3 +105,84 @@ class DoctorCreateSerializer(serializers.Serializer):
         )
 
         return doctor
+
+class PatientCreateSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone = serializers.CharField()
+    address = serializers.CharField()
+    
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username Already Exists!")
+        return value
+        
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            password=validated_data["password"],
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+            email=validated_data["email"],
+        )
+        
+        patient = Patient.objects.create(
+            user=user,
+            phone = validated_data["phone"],
+            address =validated_data["address"]                        
+        )
+        
+        return patient
+    
+    
+class AppointmentCreateSerializer(serializers.Serializer):
+    doctor_id = serializers.IntegerField()
+    patient_id = serializers.IntegerField()
+    date = serializers.DateField()
+    time = serializers.TimeField()
+    
+    def validate(self, data):
+        from .models import Appointment, Doctor, Patient
+        
+        if not Doctor.objects.filter(id=data["doctor_id"]).exists():
+            raise serializers.ValidationError("Doctor does not exists")
+
+        if not Patient.objects.filter(id=data["patient_id"]).exists():
+            raise serializers.ValidationError("Patient does not exists")
+        
+        availability = DoctorAvailability.objects.filter(
+            doctor_id=data["doctor_id"],
+            date=data["date"],
+            start_time__lte=data["time"],
+            end_time__gte=data["time"]
+        )
+
+        if not availability.exists():
+            raise serializers.ValidationError(
+                "Doctor is not available at this time."
+            )
+        
+        if Appointment.objects.filter(doctor_id=data["doctor_id"],                                      
+                                      date=data["date"],
+                                      time=data["time"],
+                                      status="BOOKED").exists():
+            raise serializers.ValidationError("Doctor has another appointment at this time")
+        
+        return data
+    
+    def create(self, validated_data):
+        from .models import Appointment
+        
+        return Appointment.objects.create(
+            doctor_id=validated_data["doctor_id"],
+            patient_id=validated_data["patient_id"],
+            date=validated_data["date"],
+            time=validated_data["time"],
+        )
+    
+    
+    
+    
