@@ -14,6 +14,21 @@ from .serializers import (
     DoctorAvailabilitySerializer,
 )
 
+class UserRoleAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        user = request.user
+
+        if hasattr(user, "doctor"):
+            return Response({"role": "doctor"})
+
+        if hasattr(user, "patient"):
+            return Response({"role": "patient"})
+
+        if user.is_superuser:
+            return Response({"role": "admin"})
+
+        return Response({"role": "unknown"})
 
 class DepartmentListCreateAPIView(generics.ListCreateAPIView):
     queryset = Department.objects.all()
@@ -52,30 +67,18 @@ class PatientCreateAPIView(APIView):
     
 class AppointmentListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = AppointmentSerializer    
+    serializer_class = AppointmentSerializer
+
     def get_queryset(self):
         user = self.request.user
-        queryset = Appointment.objects.select_related("doctor", "patient")
-        
-        if user.is_staff:
-            pass
-        elif hasattr(user, "doctor"):
-            queryset = queryset.filter(doctor__user=user)
-        elif hasattr(user, "patient"):
-            queryset = queryset.filter(patient__user=user)
-        else:
-            return Appointment.objects.none()
-        
-        doctor_id = self.request.query_params.get("doctor")
-        date = self.request.query_params.get("date")
-        
-        if doctor_id:
-            queryset = queryset.filter(doctor_id=doctor_id)
-        
-        if date:
-            queryset = queryset.filter(date=date)
-        
-        return queryset
+
+        if hasattr(user, "doctor"):
+            return Appointment.objects.filter(doctor=user.doctor)
+
+        if hasattr(user, "patient"):
+            return Appointment.objects.filter(patient=user.patient)
+
+        return Appointment.objects.all()
 
 class AppointmentCreateAPIView(APIView):
     def post(self, request):

@@ -1,54 +1,79 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import "../styles/auth.css";
 
 function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+
+  const [username,setUsername] = useState("");
+  const [password,setPassword] = useState("");
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
+
     e.preventDefault();
 
     try {
-      const res = await api.post("token/", {
-        username,
-        password,
-      });
+
+      const res = await axios.post(
+        "http://127.0.0.1:8000/api/token/",
+        {
+          username: username,
+          password: password
+        }
+      );
 
       localStorage.setItem("access", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
 
       navigate("/dashboard");
-    } catch (err) {
-      alert("Invalid credentials");
+
+    } catch(err) {
+
+      alert("Invalid username or password");
+
     }
+
   };
 
   return (
-    <div style={{ padding: "40px" }}>
+
+    <div className="login-box">
+
       <h2>Login</h2>
 
       <form onSubmit={handleLogin}>
+
+        <label>Username</label>
         <input
           type="text"
-          placeholder="Username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e)=>setUsername(e.target.value)}
+          required
         />
-        <br /><br />
 
+        <label>Password</label>
         <input
           type="password"
-          placeholder="Password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e)=>setPassword(e.target.value)}
+          required
         />
-        <br /><br />
 
-        <button type="submit">Login</button>
+        <button type="submit" className="login-button">
+          Login
+        </button>
+
       </form>
+
+      <div className="link">
+        Do not have an account?
+        <Link to="/register">Register</Link>
+      </div>
+
     </div>
+
   );
 }
 

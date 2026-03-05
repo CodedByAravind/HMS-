@@ -8,6 +8,7 @@ from .views import (
     AppointmentListAPIView,
     AppointmentCreateAPIView,
     DoctorAvailabilityCreateAPIView,
+    UserRoleAPIView,
 )
 
 urlpatterns = [
@@ -23,4 +24,5 @@ urlpatterns = [
     path("appointments/create/", AppointmentCreateAPIView.as_view()),
     
     path("availability/create/", DoctorAvailabilityCreateAPIView.as_view()),
+    path("user-role/", UserRoleAPIView.as_view()),
 ]
