@@ -1,96 +1,48 @@
-import { useEffect, useState } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { useNavigate } from "react-router-dom";
 
 function BookAppointment() {
-  const [doctors, setDoctors] = useState([]);
-  const [doctorId, setDoctorId] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
 
+  const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    api.get("doctors/")
-      .then(res => {
-        setDoctors(res.data);
-      })
-      .catch(err => console.log(err));
-  }, []);
+  const params = new URLSearchParams(location.search);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const date = params.get("date");
+  const time = params.get("time");
 
-    try {
-      await api.post("appointments/create/", {
-        doctor_id: doctorId,
-        patient_id: 1,
-        date: date,
-        time: time
-        });
+  const book = () => {
 
-      alert("Appointment booked successfully");
-
+    api.post("appointments/", {
+      doctor: id,
+      date: date,
+      time: time
+    })
+    .then(() => {
+      alert("Appointment booked");
       navigate("/dashboard");
-    } catch (err) {
-      console.log(err);
-      alert("Booking failed");
-    }
+    })
+    .catch(err => console.log(err));
+
   };
 
   return (
+
     <div style={{ padding: "40px" }}>
-      <h2>Book Appointment</h2>
 
-      <form onSubmit={handleSubmit}>
+      <h2>Confirm Appointment</h2>
 
-        <div>
-          <label>Select Doctor</label>
-          <br />
-          <select
-            value={doctorId}
-            onChange={(e) => setDoctorId(e.target.value)}
-          >
-            <option value="">Choose Doctor</option>
+      <p>Doctor ID: {id}</p>
+      <p>Date: {date}</p>
+      <p>Time: {time}</p>
 
-            {doctors.map((doc) => (
-              <option key={doc.id} value={doc.id}>
-                Dr. {doc.user.first_name} ({doc.specialization})
-              </option>
-            ))}
-          </select>
-        </div>
+      <button onClick={book}>
+        Confirm Booking
+      </button>
 
-        <br />
-
-        <div>
-          <label>Date</label>
-          <br />
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label>Time</label>
-          <br />
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-          />
-        </div>
-
-        <br />
-
-        <button type="submit">Book Appointment</button>
-
-      </form>
     </div>
+
   );
 }
 

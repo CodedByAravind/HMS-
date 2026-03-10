@@ -12,30 +12,57 @@ function Login() {
 
   const handleLogin = async (e) => {
 
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
+  try {
 
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/token/",
-        {
-          username: username,
-          password: password
+    const res = await axios.post(
+      "http://127.0.0.1:8000/api/token/",
+      {
+        username: username,
+        password: password
+      }
+    );
+
+    // clear old login
+    localStorage.clear();
+
+    // save tokens
+    localStorage.setItem("access", res.data.access);
+    localStorage.setItem("refresh", res.data.refresh);
+
+    // get user role
+    const roleRes = await axios.get(
+      "http://127.0.0.1:8000/api/user-role/",
+      {
+        headers: {
+          Authorization: `Bearer ${res.data.access}`
         }
-      );
+      }
+    );
 
-      localStorage.setItem("access", res.data.access);
-      localStorage.setItem("refresh", res.data.refresh);
+    const role = roleRes.data.role;
 
+    localStorage.setItem("role", role);
+
+    // redirect based on role
+    if (role === "admin") {
+      navigate("/admin");
+    }
+    else if (role === "doctor") {
+      navigate("/doctor");
+    }
+    else {
       navigate("/dashboard");
-
-    } catch(err) {
-
-      alert("Invalid username or password");
-
     }
 
-  };
+  } catch(err) {
+
+    alert("Invalid username or password");
+
+  }
+
+};
 
   return (
 
