@@ -17,6 +17,7 @@ class Doctor(models.Model):
     experience = models.CharField(max_length=100)
     reg_id = models.CharField(max_length=50)
     phone = models.CharField(max_length=15)
+    is_blacklisted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Dr. {self.user.get_full_name() or self.user.username}"
@@ -26,20 +27,24 @@ class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=15)
     address = models.TextField()
+    age = models.IntegerField(null=True, blank=True)
+    is_blacklisted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username
 
 
 class DoctorAvailability(models.Model):
-    doctor = models.ForeignKey(
-        Doctor,
-        on_delete=models.CASCADE,
-        related_name="availabilities"
-    )
+
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+
     date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+
+    morning_available = models.BooleanField(default=False)
+    evening_available = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("doctor", "date")
 
     def __str__(self):
         return f"{self.doctor} - {self.date}"

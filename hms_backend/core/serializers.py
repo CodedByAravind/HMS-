@@ -62,12 +62,16 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 
 class TreatmentSerializer(serializers.ModelSerializer):
-    appointment = AppointmentSerializer(read_only=True)
+
+    appointment = serializers.PrimaryKeyRelatedField(
+        queryset=Appointment.objects.all()
+    )
 
     class Meta:
         model = Treatment
         fields = "__all__"
-
+        
+        
 class DoctorCreateSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     password = serializers.CharField(write_only=True)
@@ -155,10 +159,13 @@ class AppointmentCreateSerializer(serializers.Serializer):
         
         availability = DoctorAvailability.objects.filter(
             doctor_id=data["doctor_id"],
-            date=data["date"],
-            start_time__lte=data["time"],
-            end_time__gte=data["time"]
-        )
+            date=data["date"]
+        ).first()
+
+        if not availability:
+            raise serializers.ValidationError(
+                "Doctor not available on this date"
+            )
 
         if not availability.exists():
             raise serializers.ValidationError(
@@ -174,14 +181,15 @@ class AppointmentCreateSerializer(serializers.Serializer):
         return data
     
     def create(self, validated_data):
-        from .models import Appointment
-        
-        return Appointment.objects.create(
+        appointment = Appointment.objects.create(
             doctor_id=validated_data["doctor_id"],
             patient_id=validated_data["patient_id"],
             date=validated_data["date"],
             time=validated_data["time"],
+            status="BOOKED"
         )
+
+        return appointment
     
     
     

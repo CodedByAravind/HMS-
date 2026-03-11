@@ -27,6 +27,44 @@ function AdminDashboard() {
 
   }, []);
 
+
+  const deleteDoctor = (id) => {
+
+    if (!window.confirm("Delete this doctor?")) return;
+
+    api.delete(`doctors/${id}/`)
+      .then(() => {
+        setDoctors(doctors.filter(d => d.id !== id));
+      })
+      .catch(err => console.log(err));
+
+  };
+
+
+  const deletePatient = (id) => {
+
+    if (!window.confirm("Delete this patient?")) return;
+
+    api.delete(`patients/${id}/`)
+      .then(() => {
+        setPatients(patients.filter(p => p.id !== id));
+      })
+      .catch(err => console.log(err));
+
+  };
+
+
+  const blacklistUser = (id) => {
+
+    api.post(`blacklist/${id}/`)
+      .then(() => {
+        alert("User blacklisted");
+      })
+      .catch(err => console.log(err));
+
+  };
+
+
   return (
     <div>
 
@@ -40,6 +78,7 @@ function AdminDashboard() {
           Add Doctor
         </button>
 
+
         {/* Doctors */}
 
         <h3 style={{ marginTop: "30px" }}>Registered Doctors</h3>
@@ -48,6 +87,7 @@ function AdminDashboard() {
 
           <thead>
             <tr>
+              <th>#</th>
               <th>Name</th>
               <th>Department</th>
               <th>Actions</th>
@@ -56,25 +96,44 @@ function AdminDashboard() {
 
           <tbody>
 
-            {doctors.map(d => (
+            {doctors.map((d,index) => (
               <tr key={d.id}>
+
+                <td>{index + 1}</td>
 
                 <td>
                   Dr. {d.user.first_name} {d.user.last_name}
                 </td>
 
-                <td>{d.department.name}</td>
+                <td>{d.department?.name}</td>
 
                 <td>
 
                   <button
+                    onClick={() => navigate(`/doctor/${d.id}`)}
+                  >
+                    View
+                  </button>
+
+                  <button
+                    style={{ marginLeft: "5px" }}
                     onClick={() => navigate(`/update-doctor/${d.id}`)}
                   >
                     Edit
                   </button>
 
-                  <button style={{ marginLeft: "10px" }}>
+                  <button
+                    style={{ marginLeft: "5px" }}
+                    onClick={() => deleteDoctor(d.id)}
+                  >
                     Delete
+                  </button>
+
+                  <button
+                    style={{ marginLeft: "5px" }}
+                    onClick={() => blacklistUser(d.user.id)}
+                  >
+                    Blacklist
                   </button>
 
                 </td>
@@ -85,6 +144,7 @@ function AdminDashboard() {
           </tbody>
 
         </table>
+
 
 
         {/* Patients */}
@@ -95,15 +155,19 @@ function AdminDashboard() {
 
           <thead>
             <tr>
+              <th>#</th>
               <th>Name</th>
               <th>Phone</th>
+              <th>Actions</th>
             </tr>
           </thead>
 
           <tbody>
 
-            {patients.map(p => (
+            {patients.map((p,index) => (
               <tr key={p.id}>
+
+                <td>{index + 1}</td>
 
                 <td>
                   {p.user.first_name} {p.user.last_name}
@@ -111,12 +175,41 @@ function AdminDashboard() {
 
                 <td>{p.phone}</td>
 
+                <td>
+
+                  <button
+                    onClick={() => navigate(`/history/${p.id}`)}
+                  >
+                    View
+                  </button>
+
+                  <button style={{ marginLeft: "5px" }}>
+                    Edit
+                  </button>
+
+                  <button
+                    style={{ marginLeft: "5px" }}
+                    onClick={() => deletePatient(p.id)}
+                  >
+                    Delete
+                  </button>
+
+                  <button
+                    style={{ marginLeft: "5px" }}
+                    onClick={() => blacklistUser(p.user.id)}
+                  >
+                    Blacklist
+                  </button>
+
+                </td>
+
               </tr>
             ))}
 
           </tbody>
 
         </table>
+
 
 
         {/* Appointments */}
@@ -127,16 +220,20 @@ function AdminDashboard() {
 
           <thead>
             <tr>
+              <th>#</th>
               <th>Patient</th>
               <th>Doctor</th>
               <th>Date</th>
+              <th>Action</th>
             </tr>
           </thead>
 
           <tbody>
 
-            {appointments.map(a => (
+            {appointments.map((a,index) => (
               <tr key={a.id}>
+
+                <td>{index + 1}</td>
 
                 <td>
                   {a.patient.user.first_name} {a.patient.user.last_name}
@@ -147,6 +244,16 @@ function AdminDashboard() {
                 </td>
 
                 <td>{a.date}</td>
+
+                <td>
+
+                  <button
+                    onClick={() => navigate(`/appointment/${a.id}`)}
+                  >
+                    View
+                  </button>
+
+                </td>
 
               </tr>
             ))}

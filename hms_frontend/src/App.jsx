@@ -44,7 +44,7 @@ function App() {
         />
 
         <Route
-          path="/departments"
+          path="/departments/:id"
           element={
             <ProtectedRoute>
               <Departments />
